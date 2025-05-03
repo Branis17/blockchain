@@ -1,39 +1,41 @@
-const SHA256 = require('crypto-js/sha256');
+const { GENESIS_DATA } = require('./genesis');
+const { cryptoHash } = require('./crypto-hash');
+const { MINE_RATE, INITIAL_DIFFICULTY } = require('./config');
 
 class Block {
-  constructor(timestamp, lastHash, hash, data) {
+  constructor({ timestamp, lastHash, hash, data, nonce, difficulty }) {
     this.timestamp = timestamp;
     this.lastHash = lastHash;
     this.hash = hash;
     this.data = data;
-  }
-
-  toString() {
-    return `Block -
-      Timestamp : ${this.timestamp}
-      Last Hash : ${this.lastHash}
-      Hash      : ${this.hash}
-      Data      : ${this.data}`;
+    this.nonce = nonce;
+    this.difficulty = difficulty;
   }
 
   static genesis() {
-    return new this("Genesis time", "---", "first-hash", []);
+    return new this(GENESIS_DATA);
   }
 
-  static hash(timestamp, lastHash, data) {
-    return SHA256(`${timestamp}${lastHash}${data}`).toString();
-  }
-
-  static mineBlock(lastBlock, data) {
-    const timestamp = Date.now();
+  static mineBlock({ lastBlock, data }) {
+    let hash, timestamp;
     const lastHash = lastBlock.hash;
-    const hash = this.hash(timestamp, lastHash, data);
-    return new this(timestamp, lastHash, hash, data);
+    let { difficulty } = lastBlock;
+    let nonce = 0;
+
+    do {
+      nonce++;
+      timestamp = Date.now();
+      difficulty = Block.adjustDifficulty({ originalBlock: lastBlock, timestamp });
+      hash = cryptoHash(timestamp, lastHash, data, nonce, difficulty);
+    } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
+
+    return new this({ timestamp, lastHash, data, difficulty, nonce, hash });
   }
 
-  static blockHash(block) {
-    const { timestamp, lastHash, data } = block;
-    return this.hash(timestamp, lastHash, data);
+  static adjustDifficulty({ originalBlock, timestamp }) {
+    const { difficulty } = originalBlock;
+    if (difficulty < 1) return 1;
+    return timestamp - originalBlock.timestamp > MINE_RATE ? difficulty - 1 : difficulty + 1;
   }
 }
 

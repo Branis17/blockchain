@@ -1,6 +1,8 @@
 const Block = require('./block');
+if (Math.abs(lastBlock.difficulty - block.difficulty) > 1) return false;
 
 class Blockchain {
+  
   constructor() {
     this.chain = [Block.genesis()];
   }
