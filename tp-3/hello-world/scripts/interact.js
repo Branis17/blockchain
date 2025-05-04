@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 
 async function main() {
-  const contractAddress = "ADRESSE_DU_CONTRAT_ICI";
+  const contractAddress = "0xA30c2c3dfC6aCEf59E58519b7C06A7C45d8CD68f"; 
   const HelloWorld = await hre.ethers.getContractFactory("HelloWorld");
 
   const contract = await HelloWorld.attach(contractAddress);
@@ -11,7 +11,7 @@ async function main() {
   console.log("Message actuel :", currentMessage);
 
   
-  const tx = await contract.update("Ton prénom ici sur la blockchain !");
+  const tx = await contract.update("branis blockchain !");
   await tx.wait();
 
   
